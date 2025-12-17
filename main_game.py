@@ -13,12 +13,12 @@ from game_timer import GameTimer
 class VirtualHandGame:
     def __init__(self):
         self.cap = cv2.VideoCapture(0)
-        self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, 960)
-        self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
+        self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1920)
+        self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)
         
         # Tony's modules
         self.mapper = ColumnMapper(num_cols=4)
-        self.renderer = Renderer(width=960, height=720)
+        self.renderer = Renderer(width=1920, height=1080)
         self.timer = GameTimer(total_time=90)
         
         # Game state
@@ -38,7 +38,7 @@ class VirtualHandGame:
                 break
             
             frame = cv2.flip(frame, 1)
-            frame = cv2.resize(frame, (960, 720))
+            frame = cv2.resize(frame, (1920, 1080))
             
             if not self.game_over:
                 # 2. Preprocess (Hassan)
@@ -53,7 +53,7 @@ class VirtualHandGame:
                 centroid = {'x': 480, 'y': 360}  # TODO: Replace
                 
                 # 5. Map to column (Tony)
-                self.basket_col = self.mapper.map_to_column(centroid['x'], 960)
+                self.basket_col = self.mapper.map_to_column(centroid['x'], 1920)
                 
                 # 6. Update balls (Fararg)
                 # update_balls(self.balls, self.basket_col)

@@ -4,6 +4,7 @@ from column_mapper import ColumnMapper
 from renderer import Renderer
 from game_timer import GameTimer
 import random
+import math
 
 class TestTonyWithCamera:
     def __init__(self):
@@ -56,7 +57,7 @@ class TestTonyWithCamera:
             ball['y'] += ball['speed']
             
             # Check collision at net level
-            if ball['y'] >= 720 - 100:
+            if ball['y'] >= 720 - 130:
                 if ball['col'] == self.basket_col:
                     if ball['type'] == 'regular':
                         self.score += 10
@@ -111,7 +112,6 @@ class TestTonyWithCamera:
             if not self.game_over:
                 # Auto movement (sinusoidal)
                 if self.auto_mode:
-                    import math
                     t = cv2.getTickCount() / cv2.getTickFrequency()
                     self.test_x = int(480 + 380 * math.sin(t * 0.5))
                 

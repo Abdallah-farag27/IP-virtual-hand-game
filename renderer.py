@@ -1,5 +1,6 @@
 import cv2
 import numpy as np
+import math
 
 class Renderer:
     def __init__(self, width=960, height=720, num_cols=4):
@@ -146,7 +147,7 @@ class Renderer:
             cv2.circle(frame, (x_center, y_center), int(radius * 0.4), (0, 165, 255), 2)
             
             # Explosion particles (lines radiating out)
-            import math
+            
             for angle in range(0, 360, 30):
                 rad = math.radians(angle)
                 x1 = int(x_center + radius * 0.5 * math.cos(rad))

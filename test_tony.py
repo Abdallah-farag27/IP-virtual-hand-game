@@ -33,7 +33,7 @@ class TestTonyWithCamera:
         
         # Smoothing for hand tracking (exponential moving average)
         self.smoothed_x = 960  # Start at center of 1920
-        self.smooth_alpha = 0.15  # Lower = smoother but slower response
+        self.smooth_alpha = 0.3  # Balance between responsive and smooth
         
         # Ball spawning
         self.last_spawn = 0
@@ -52,7 +52,7 @@ class TestTonyWithCamera:
             'y': 70,
             'col': col,
             'type': 'bomb' if random.random() < 0.2 else 'regular',
-            'speed': 6
+            'speed': 8
         }
         self.balls.append(ball)
     
@@ -127,17 +127,11 @@ class TestTonyWithCamera:
                     centroid = get_hand_centroid(mask)
                     
                     if centroid:
-                        # Scale x to make edge columns easier to reach
-                        # Map from margin to (width-margin) instead of 0 to width  
-                        margin = 400  # Large margin - much easier to reach edges
+                        # Use the raw x position directly (frame is already 1920 wide)
                         raw_x = centroid['x']
-                        # Clamp and scale to full width
-                        clamped_x = max(margin, min(1920 - margin, raw_x))
-                        scaled_x = int((clamped_x - margin) * 1920 / (1920 - 2 * margin))
-                        scaled_x = max(0, min(1919, scaled_x))
                         
                         # Apply exponential moving average for smooth tracking
-                        self.smoothed_x = self.smooth_alpha * scaled_x + (1 - self.smooth_alpha) * self.smoothed_x
+                        self.smoothed_x = self.smooth_alpha * raw_x + (1 - self.smooth_alpha) * self.smoothed_x
                         self.test_x = int(self.smoothed_x)
                     
                     # Draw debug visualization if enabled

@@ -68,7 +68,7 @@ def segment_hand(hsv_frame):
 
 def get_hand_centroid(mask):
     """
-    Finds the largest contour in the mask and computes its centroid.
+    Finds the lowest large contour in the mask (to avoid detecting face).
     
     Args:
         mask: Binary mask from segment_hand()
@@ -77,21 +77,39 @@ def get_hand_centroid(mask):
         Dictionary {'x': int, 'y': int} with centroid coordinates,
         or None if no hand is detected
     """
+    height = mask.shape[0]
+    
     # Find all contours in the mask
     contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     
     if not contours:
         return None
     
-    # Find the largest contour (assumed to be the hand)
-    largest_contour = max(contours, key=cv2.contourArea)
+    # Filter contours: must be large enough and in lower portion of frame
+    valid_contours = []
+    for contour in contours:
+        area = cv2.contourArea(contour)
+        if area < 2000:  # Reduced threshold
+            continue
+            
+        # Get bounding box to check position
+        x, y, w, h = cv2.boundingRect(contour)
+        centroid_y = y + h // 2
+        
+        # Ignore contours in top 40% of frame (likely face)
+        if centroid_y < height * 0.4:
+            continue
+            
+        valid_contours.append((contour, centroid_y, area))
     
-    # Filter out small contours (noise)
-    if cv2.contourArea(largest_contour) < 3000:
+    if not valid_contours:
         return None
     
+    # Pick the LARGEST valid contour (should be the hand)
+    best_contour = max(valid_contours, key=lambda x: x[2])[0]
+    
     # Calculate moments to find centroid
-    moments = cv2.moments(largest_contour)
+    moments = cv2.moments(best_contour)
     
     if moments['m00'] == 0:
         return None

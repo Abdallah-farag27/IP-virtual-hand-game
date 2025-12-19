@@ -3,7 +3,7 @@ import numpy as np
 import math
 
 class Renderer:
-    def __init__(self, width=960, height=720, num_cols=4):
+    def __init__(self, width=960, height=720, num_cols=3):
         self.width = width
         self.height = height
         self.num_cols = num_cols

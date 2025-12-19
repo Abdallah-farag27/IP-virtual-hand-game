@@ -1,5 +1,5 @@
 class ColumnMapper:
-    def __init__(self, num_cols=4, smooth=True, max_jump=1):
+    def __init__(self, num_cols=3, smooth=True, max_jump=1):
         self.num_cols = num_cols
         self.smooth = smooth
         self.max_jump = max_jump

@@ -58,15 +58,14 @@ MORPH_DILATE_ITERATIONS = 1 # Number of dilation iterations (expands hand)
 
 # GAME MODES
 # Multipliers for Speed and Score based on finger count
-MODE_SLOW_MULTIPLIER = 0.5   # 0 fingers (Fist)
-MODE_NORMAL_MULTIPLIER = 1.0 # 1-2 fingers
-MODE_FAST_MULTIPLIER = 1.5   # 3 fibers
-MODE_TURBO_MULTIPLIER = 2.0  # 4-5 fingers
+MODE_SLOW_MULTIPLIER = 0.5   
+MODE_NORMAL_MULTIPLIER = 1.0 
+MODE_FAST_MULTIPLIER = 1.5   
 
 # GAME SETTINGS
 
 # Column Layout
-NUM_COLUMNS = 3         # Number of columns (3 recommended, 4 for harder gameplay)
+NUM_COLUMNS = 3         
 
 # Column Mapper Settings
 ENABLE_COLUMN_SMOOTHING = True  # Smooth column transitions

@@ -285,7 +285,7 @@ class HandDetector:
         # If we found defects, it means we have fingers up.
         # N defects usually means N+1 fingers.
         if count > 0:
-            return count + 1
+            return min(count + 1, 5)
         
         # Special case: 0 defects usually means 0 fingers (fist) or 1 finger.
         # Distinguish using shape properties.

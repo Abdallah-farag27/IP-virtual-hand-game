@@ -1,25 +1,12 @@
 import cv2
-import time
 import random
-import math
 from hand_detector import HandDetector
 from column_mapper import ColumnMapper
 from renderer import Renderer
 from game_timer import GameTimer
 import config
 
-class VirtualHandGame:
-    """
-    Virtual Hand Basketball Game with improved hand detection.
-    
-    Uses classical image processing techniques for robust hand tracking:
-    - ROI restriction
-    - Contour area filtering
-    - Temporal smoothing
-    - Distance transform palm detection
-    - 3-column layout
-    """
-    
+class VirtualHandGame: 
     def __init__(self):
         # Initialize camera
         self.cap = cv2.VideoCapture(config.CAMERA_INDEX)
@@ -76,7 +63,6 @@ class VirtualHandGame:
         self.fps_start_time = cv2.getTickCount()
     
     def calculate_fps(self):
-        """Calculate and update FPS."""
         self.frame_count += 1
         if self.frame_count >= config.FPS_UPDATE_INTERVAL_FRAMES:
             current_time = cv2.getTickCount()
@@ -86,7 +72,6 @@ class VirtualHandGame:
             self.fps_start_time = current_time
             
     def update_game_mode(self, finger_count):
-        """Update game mode based on finger count."""
         if finger_count == 5:
             self.current_mode_name = "SLOW-MO"
             self.speed_multiplier = config.MODE_SLOW_MULTIPLIER
@@ -105,7 +90,6 @@ class VirtualHandGame:
             self.score_multiplier = config.MODE_TURBO_MULTIPLIER
     
     def spawn_ball(self):
-        """Spawn a new ball or bomb."""
         col = random.randint(0, config.NUM_COLUMNS - 1)
         col_width = config.CAMERA_WIDTH / config.NUM_COLUMNS
         x = int(col * col_width + col_width / 2)
@@ -123,7 +107,6 @@ class VirtualHandGame:
         self.balls.append(ball)
     
     def update_balls(self):
-        """Update ball positions and check collisions."""
         to_remove = []
         
         for i, ball in enumerate(self.balls):
@@ -159,7 +142,6 @@ class VirtualHandGame:
             del self.balls[i]
     
     def draw_debug_info(self, frame, hand_info):
-        """Draw debug information on frame."""
         if not config.SHOW_DEBUG_INFO:
             return
         

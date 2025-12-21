@@ -3,16 +3,6 @@ import numpy as np
 from hand_detector import HandDetector
 
 class TestStep1ROI:
-    """
-    Test Step 1: ROI Restriction + Skin Detection
-    
-    This test shows:
-    1. Original camera frame
-    2. ROI boundary visualization
-    3. Skin detection mask
-    4. Detected hand contour and centroid
-    """
-    
     def __init__(self):
         self.cap = cv2.VideoCapture(0)
         self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, 960)
@@ -31,7 +21,6 @@ class TestStep1ROI:
         self.fps_start_time = cv2.getTickCount()
     
     def calculate_fps(self):
-        """Calculate and update FPS."""
         self.frame_count += 1
         if self.frame_count >= 10:
             current_time = cv2.getTickCount()
@@ -41,16 +30,6 @@ class TestStep1ROI:
             self.fps_start_time = current_time
     
     def create_visualization(self, frame, hand_info):
-        """
-        Create multi-panel visualization.
-        
-        Args:
-            frame: Original frame
-            hand_info: Hand detection result
-            
-        Returns:
-            Combined visualization image
-        """
         frame_height, frame_width = frame.shape[:2]
         
         # Panel 1: Original frame with ROI boundary

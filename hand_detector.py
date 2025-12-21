@@ -2,21 +2,8 @@ import cv2
 import numpy as np
 import math
 
-class HandDetector:
-    """
-    Hand detection using classical image processing techniques.
-    Step 1: ROI Restriction + Skin Detection
-    """
-    
+class HandDetector: 
     def __init__(self, roi_height_ratio=0.5, min_area=5000, max_area=50000):
-        """
-        Initialize hand detector.
-        
-        Args:
-            roi_height_ratio: Fraction of frame height to use as ROI (from bottom)
-            min_area: Minimum contour area to consider as hand
-            max_area: Maximum contour area to consider as hand
-        """
         self.roi_height_ratio = roi_height_ratio
         self.min_area = min_area
         self.max_area = max_area
@@ -35,22 +22,10 @@ class HandDetector:
         self.smoothing_alpha = 0.3  # Exponential smoothing factor
         
     def get_roi_bounds(self, frame_height):
-        """Calculate ROI boundaries (lower portion of frame)."""
         roi_start_y = int(frame_height * (1 - self.roi_height_ratio))
         return roi_start_y, frame_height
     
     def detect_skin(self, frame, use_ycrcb=False):
-        """
-        Detect skin-colored regions using HSV color space.
-        Optionally combines with YCrCb for more robust detection.
-        
-        Args:
-            frame: BGR image
-            use_ycrcb: Whether to also use YCrCb color space
-            
-        Returns:
-            Binary mask of skin regions
-        """
         # Convert to HSV
         hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
         
@@ -91,15 +66,6 @@ class HandDetector:
         return skin_mask
     
     def find_hand_contour(self, mask):
-        """
-        Find the largest valid hand contour in the mask.
-        
-        Args:
-            mask: Binary mask
-            
-        Returns:
-            Largest contour or None if no valid contour found
-        """
         # Find all contours
         contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
         
@@ -117,15 +83,6 @@ class HandDetector:
         return max(valid_contours, key=cv2.contourArea)
     
     def get_contour_centroid(self, contour):
-        """
-        Calculate centroid of contour.
-        
-        Args:
-            contour: OpenCV contour
-            
-        Returns:
-            (x, y) tuple of centroid coordinates
-        """
         M = cv2.moments(contour)
         if M["m00"] == 0:
             return None
@@ -135,18 +92,6 @@ class HandDetector:
         return (cx, cy)
     
     def get_palm_center_distance_transform(self, mask, contour):
-        """
-        Find palm center using distance transform.
-        More stable than centroid when fingers are moving.
-        
-        Args:
-            mask: Binary mask of hand
-            contour: Hand contour
-            
-        Returns:
-            (x, y) tuple of palm center coordinates, or None
-            distance_transform: Distance transform image for visualization
-        """
         # Create mask for just this contour
         contour_mask = np.zeros_like(mask)
         cv2.drawContours(contour_mask, [contour], -1, 255, -1)
@@ -164,15 +109,6 @@ class HandDetector:
 
     
     def apply_temporal_smoothing(self, x):
-        """
-        Apply exponential smoothing to x-coordinate.
-        
-        Args:
-            x: Current x-coordinate
-            
-        Returns:
-            Smoothed x-coordinate
-        """
         if self.prev_x is None:
             self.prev_x = x
             return x
@@ -183,23 +119,6 @@ class HandDetector:
         return smoothed_x
     
     def detect_hand(self, frame, use_smoothing=True):
-        """
-        Detect hand in frame using ROI restriction and skin detection.
-        
-        Args:
-            frame: BGR image
-            use_smoothing: Whether to apply temporal smoothing
-            
-        Returns:
-            Dictionary with hand information:
-            {
-                'x': x-coordinate of hand center,
-                'y': y-coordinate of hand center,
-                'contour': hand contour,
-                'roi_start_y': ROI start y-coordinate,
-                'detected': True if hand found
-            }
-        """
         frame_height, frame_width = frame.shape[:2]
         
         # Get ROI bounds
@@ -253,17 +172,6 @@ class HandDetector:
         return result
     
     def detect_hand_with_palm_center(self, frame, use_smoothing=True):
-        """
-        Detect hand using distance transform for palm center detection.
-        More stable than centroid-based detection.
-        
-        Args:
-            frame: BGR image
-            use_smoothing: Whether to apply temporal smoothing
-            
-        Returns:
-            Dictionary with hand information including distance transform
-        """
         frame_height, frame_width = frame.shape[:2]
         
         # Get ROI bounds
@@ -325,15 +233,6 @@ class HandDetector:
         return result
 
     def count_fingers(self, contour):
-        """
-        Count fingers using convexity defects.
-        
-        Args:
-            contour: Hand contour
-            
-        Returns:
-            Number of fingers extended (0-5)
-        """
         if contour is None:
             return 0
             
@@ -399,12 +298,6 @@ class HandDetector:
             hull_area = cv2.contourArea(hull_points)
             solidity = float(area) / hull_area if hull_area > 0 else 0
             
-            # Heuristic: 
-            # 1 Finger is usually "tall" (High aspect ratio) AND/OR has lower solidity (not a perfect blob) due to the stick shape.
-            # Fist is usually a "blob" (Square-ish aspect ratio, High solidity).
-            
-            # If height is significantly larger than width (tall), typically 1 finger up.
-            # OR if solidity is low (meaning hull is much larger than contour), it's likely a finger sticking out.
             if aspect_ratio > 1.3 or solidity < 0.88:
                 return 1
                 
@@ -414,5 +307,4 @@ class HandDetector:
 
     
     def reset(self):
-        """Reset temporal smoothing state."""
         self.prev_x = None

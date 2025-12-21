@@ -184,7 +184,6 @@ class Renderer:
                 cv2.putText(frame, text, (text_x, text_y), font, 1.5, (0, 0, 255), 4)
     
     def render_ui(self, frame, balls, basket_col, score, lives, time_left, bomb_effect_frame=0, finger_count=None, mode_name="NORMAL", speed_multiplier=None):
-        """Render all game UI elements."""
         # Draw columns
         self.draw_column_dividers(frame)
         
@@ -201,7 +200,6 @@ class Renderer:
         self.draw_ui_info(frame, score, lives, time_left, finger_count, mode_name, speed_multiplier)
             
     def draw_hand(self, frame, hand_info):
-        """Draw hand contour and center for visual feedback."""
         if not hand_info['detected']:
             return
             

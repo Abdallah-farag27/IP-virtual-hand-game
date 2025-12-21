@@ -3,16 +3,6 @@ import numpy as np
 from hand_detector import HandDetector
 
 class TestStep2AreaFilter:
-    """
-    Test Step 2: Contour Area Filtering
-    
-    This test shows:
-    1. All detected contours with area labels
-    2. Valid contours (within size range) highlighted
-    3. Rejected contours (too small/large) shown in different colors
-    4. Final selected hand contour
-    """
-    
     def __init__(self):
         self.cap = cv2.VideoCapture(0)
         self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, 960)
@@ -31,7 +21,6 @@ class TestStep2AreaFilter:
         self.fps_start_time = cv2.getTickCount()
     
     def calculate_fps(self):
-        """Calculate and update FPS."""
         self.frame_count += 1
         if self.frame_count >= 10:
             current_time = cv2.getTickCount()
@@ -41,12 +30,6 @@ class TestStep2AreaFilter:
             self.fps_start_time = current_time
     
     def get_all_contours_info(self, frame):
-        """
-        Get information about all contours for visualization.
-        
-        Returns:
-            Dictionary with contour classification
-        """
         frame_height, frame_width = frame.shape[:2]
         roi_start_y, roi_end_y = self.detector.get_roi_bounds(frame_height)
         roi = frame[roi_start_y:roi_end_y, :]
@@ -87,17 +70,6 @@ class TestStep2AreaFilter:
         }
     
     def create_visualization(self, frame, contour_info, hand_info):
-        """
-        Create multi-panel visualization.
-        
-        Args:
-            frame: Original frame
-            contour_info: Contour classification info
-            hand_info: Hand detection result
-            
-        Returns:
-            Combined visualization image
-        """
         frame_height, frame_width = frame.shape[:2]
         roi_y = contour_info['roi_start_y']
         

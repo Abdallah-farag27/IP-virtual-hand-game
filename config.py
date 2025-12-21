@@ -1,13 +1,9 @@
-# ============================================================================
 # CAMERA SETTINGS
-# ============================================================================
 CAMERA_WIDTH = 960
 CAMERA_HEIGHT = 720
 CAMERA_INDEX = 0  # 0 for default camera, change if you have multiple cameras
 
-# ============================================================================
 # HAND DETECTION SETTINGS
-# ============================================================================
 
 # ROI (Region of Interest) Settings
 ROI_HEIGHT_RATIO = 0.5  # Fraction of frame height to use (0.5 = lower 50%)
@@ -60,18 +56,14 @@ MORPH_OPEN_ITERATIONS = 2   # Number of opening iterations (removes noise)
 MORPH_CLOSE_ITERATIONS = 2  # Number of closing iterations (fills holes)
 MORPH_DILATE_ITERATIONS = 1 # Number of dilation iterations (expands hand)
 
-# ============================================================================
 # GAME MODES
-# ============================================================================
 # Multipliers for Speed and Score based on finger count
 MODE_SLOW_MULTIPLIER = 0.5   # 0 fingers (Fist)
 MODE_NORMAL_MULTIPLIER = 1.0 # 1-2 fingers
 MODE_FAST_MULTIPLIER = 1.5   # 3 fibers
 MODE_TURBO_MULTIPLIER = 2.0  # 4-5 fingers
 
-# ============================================================================
 # GAME SETTINGS
-# ============================================================================
 
 # Column Layout
 NUM_COLUMNS = 3         # Number of columns (3 recommended, 4 for harder gameplay)
@@ -107,9 +99,7 @@ BASKET_DETECTION_THRESHOLD_Y = 130  # Distance from bottom for basket detection
 # Starting Lives
 STARTING_LIVES = 3
 
-# ============================================================================
 # DISPLAY SETTINGS
-# ============================================================================
 
 # Window Settings
 WINDOW_NAME = "Virtual Hand Basketball Game"
@@ -122,9 +112,7 @@ ROI_COLOR = (0, 255, 255)           # Yellow
 HAND_COLOR = (0, 255, 0)            # Green
 COLUMN_DIVIDER_COLOR = (150, 150, 150)  # Gray
 
-# ============================================================================
 # PERFORMANCE SETTINGS
-# ============================================================================
 
 # Frame Processing
 TARGET_FPS = 30         # Target frames per second
@@ -137,9 +125,7 @@ VISUALIZATION_SCALE = 0.5  # Scale factor for visualization windows (0.5 = 50% s
                            # Adjust if panels are too large for your screen
                            # Range: 0.3-1.0
 
-# ============================================================================
 # ADVANCED SETTINGS (Usually don't need to change)
-# ============================================================================
 
 # Contour Detection
 CONTOUR_RETRIEVAL_MODE = 2  # cv2.RETR_EXTERNAL
@@ -151,40 +137,3 @@ DISTANCE_TRANSFORM_MASK = 5  # Mask size
 
 # Bomb Effect Duration
 BOMB_EFFECT_FRAMES = 20  # Number of frames to show explosion effect
-
-# ============================================================================
-# NOTES
-# ============================================================================
-"""
-TUNING TIPS:
-
-1. If hand is not detected:
-   - Increase ROI_HEIGHT_RATIO (e.g., 0.6)
-   - Decrease MIN_HAND_AREA (e.g., 3000)
-   - Adjust HSV color ranges for your skin tone and lighting
-
-2. If too much noise/false positives:
-   - Decrease MAX_HAND_AREA (e.g., 40000)
-   - Increase MIN_HAND_AREA (e.g., 7000)
-   - Increase MORPH_OPEN_ITERATIONS (e.g., 3)
-
-3. If hand detection is jittery:
-   - Decrease SMOOTHING_ALPHA (e.g., 0.2)
-   - Enable USE_PALM_DETECTION
-
-4. If game is too hard/easy:
-   - Adjust BALL_SPAWN_INTERVAL
-   - Adjust BALL_SPEED
-   - Change NUM_COLUMNS (3 = easier, 4 = harder)
-
-5. For different lighting conditions:
-   - Test with test_step1_roi.py to see skin detection
-   - Adjust HSV ranges accordingly
-   - Consider enabling USE_YCRCB for more robust detection
-
-6. YCrCb vs HSV:
-   - HSV alone is usually sufficient and faster
-   - YCrCb can help in challenging lighting (backlighting, shadows)
-   - Using both is more robust but ~20% slower
-   - Start with HSV only, enable YCrCb if needed
-"""

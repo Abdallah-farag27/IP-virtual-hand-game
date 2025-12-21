@@ -44,6 +44,7 @@ class VirtualHandGame:
         self.balls = []
         self.basket_col = config.NUM_COLUMNS // 2  # Start at center
         self.game_over = False
+        self.game_won = False
         
         # Game Modes & Multipliers
         self.current_mode_name = "NORMAL"
@@ -314,6 +315,8 @@ class VirtualHandGame:
                 # Check game over
                 if self.timer.is_over():
                     self.game_over = True
+                    if self.lives > 0:
+                        self.game_won = True
                 
                 # Render game
                 self.renderer.render_ui(
@@ -338,7 +341,7 @@ class VirtualHandGame:
                                cv2.FONT_HERSHEY_SIMPLEX, 0.6, config.TEXT_COLOR, 2)
             else:
                 # Game over screen
-                self.renderer.draw_game_over(frame, self.score)
+                self.renderer.draw_game_over(frame, self.score, is_win=self.game_won)
             
             # Show frame
             cv2.imshow(config.WINDOW_NAME, frame)
@@ -373,6 +376,7 @@ class VirtualHandGame:
         self.balls = []
         self.basket_col = config.NUM_COLUMNS // 2
         self.game_over = False
+        self.game_won = False
         self.bomb_effect_frame = 0
         self.timer.reset()
         self.timer.start()

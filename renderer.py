@@ -224,19 +224,25 @@ class Renderer:
             radius = int(hand_info['palm_radius'])
             cv2.circle(frame, (cx, cy), radius, (255, 0, 255), 1)
     
-    def draw_game_over(self, frame, final_score):
+    def draw_game_over(self, frame, final_score, is_win=False):
         # Semi-transparent dark overlay
         overlay = frame.copy()
         cv2.rectangle(overlay, (0, 0), (self.width, self.height), (0, 0, 0), -1)
         cv2.addWeighted(overlay, 0.75, frame, 0.25, 0, frame)
         
-        # "GAME OVER" text
-        text = "GAME OVER"
+        # Text based on win/loss
+        if is_win:
+            text = "YOU WON!"
+            color = (0, 255, 0) # Green
+        else:
+            text = "GAME OVER"
+            color = (0, 0, 255) # Red
+
         font = cv2.FONT_HERSHEY_SIMPLEX
         text_size = cv2.getTextSize(text, font, 2.5, 4)[0]
         text_x = (self.width - text_size[0]) // 2
         text_y = self.height // 2 - 80
-        cv2.putText(frame, text, (text_x, text_y), font, 2.5, (0, 0, 255), 5)
+        cv2.putText(frame, text, (text_x, text_y), font, 2.5, color, 5)
         
         # Final score
         score_text = f"Final Score: {final_score}"

@@ -63,7 +63,7 @@ class VirtualHandGame:
         self.fps_start_time = cv2.getTickCount()
 
         # Toggle for finger detection
-        self.finger_detection_enabled = True
+        self.finger_detection_enabled = False
     
     def calculate_fps(self):
         self.frame_count += 1

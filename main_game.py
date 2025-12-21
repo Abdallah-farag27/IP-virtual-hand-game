@@ -1,6 +1,7 @@
 import cv2
 import random
 from hand_detector import HandDetector
+from hand_detector_mediapipe import MediaPipeDetector
 from column_mapper import ColumnMapper
 from renderer import Renderer
 from game_timer import GameTimer
@@ -13,13 +14,9 @@ class VirtualHandGame:
         self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, config.CAMERA_WIDTH)
         self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, config.CAMERA_HEIGHT)
         
-        # Initialize hand detector with config settings
-        self.detector = HandDetector(
-            roi_height_ratio=config.ROI_HEIGHT_RATIO,
-            min_area=config.MIN_HAND_AREA,
-            max_area=config.MAX_HAND_AREA
-        )
-        self.detector.smoothing_alpha = config.SMOOTHING_ALPHA
+        # Initialize hand detector (Will be set in select_mode)
+        self.detector = None
+        self.detector_type = "classic"
         
         # Initialize column mapper
         self.mapper = ColumnMapper(
@@ -66,6 +63,40 @@ class VirtualHandGame:
         # Toggle for finger detection
         self.finger_detection_enabled = False
     
+    def select_mode(self):
+        """Show start screen and get user mode selection."""
+        print("Waiting for mode selection...")
+        while True:
+            ret, frame = self.cap.read()
+            if not ret: break
+            
+            frame = cv2.flip(frame, 1)
+            frame = cv2.resize(frame, (config.CAMERA_WIDTH, config.CAMERA_HEIGHT))
+            
+            self.renderer.draw_start_screen(frame)
+            cv2.imshow(config.WINDOW_NAME, frame)
+            
+            key = cv2.waitKey(1) & 0xFF
+            if key == ord('1'):
+                self.detector_type = "classic"
+                self.detector = HandDetector(
+                    roi_height_ratio=config.ROI_HEIGHT_RATIO,
+                    min_area=config.MIN_HAND_AREA,
+                    max_area=config.MAX_HAND_AREA
+                )
+                self.detector.smoothing_alpha = config.SMOOTHING_ALPHA
+                print("Selected: Classic Mode (IP)")
+                break
+            elif key == ord('2'):
+                self.detector_type = "mediapipe"
+                self.detector = MediaPipeDetector()
+                print("Selected: AI Mode (MediaPipe)")
+                break
+            elif key == ord('q'):
+                self.cap.release()
+                cv2.destroyAllWindows()
+                exit()
+
     def calculate_fps(self):
         self.frame_count += 1
         if self.frame_count >= config.FPS_UPDATE_INTERVAL_FRAMES:
@@ -211,166 +242,183 @@ class VirtualHandGame:
         print("Catch basketballs (+10 points), avoid bombs (-1 life)!")
         print("=" * 80)
         
-        self.timer.start()
-        
-        while True:
-            # Capture frame
-            ret, frame = self.cap.read()
-            if not ret:
-                print("Failed to capture frame")
-                break
+        while True: # Outer loop for Game Session (Mode Selection)
+            # 1. Select Mode
+            self.select_mode()
             
-            frame = cv2.flip(frame, 1)
-            frame = cv2.resize(frame, (config.CAMERA_WIDTH, config.CAMERA_HEIGHT))
+            # 2. Reset Game State for new round
+            self.reset_game_state()
+            self.timer.start()
             
-            if not self.game_over:
+            # 3. Game Round Loop
+            while True:
+                # Capture frame
+                ret, frame = self.cap.read()
+                if not ret:
+                    print("Failed to capture frame")
+                    break
                 
-                # Get ROI bounds for drawing
-                roi_start_y, _ = self.detector.get_roi_bounds(config.CAMERA_HEIGHT)
+                frame = cv2.flip(frame, 1)
+                frame = cv2.resize(frame, (config.CAMERA_WIDTH, config.CAMERA_HEIGHT))
                 
-                # Initialize hand_info with defaults
-                hand_info = {
-                    'detected': False,
-                    'x': None,
-                    'y': None,
-                    'roi_start_y': roi_start_y, # Ensure this is always available
-                    'contour': None
-                }
+                if not self.game_over:
+                    
+                    # Get ROI bounds for drawing
+                    # Get ROI bounds for drawing
+                    roi_start_y, _ = self.detector.get_roi_bounds(config.CAMERA_HEIGHT)
+                    
+                    
+                    # Initialize hand_info with defaults
+                    hand_info = {
+                        'detected': False,
+                        'x': None,
+                        'y': None,
+                        'roi_start_y': roi_start_y, # Ensure this is always available
+                        'contour': None
+                    }
 
-                if self.finger_detection_enabled:
-                    # Detect hand
-                    if config.USE_PALM_DETECTION:
-                        detect_result = self.detector.detect_hand_with_palm_center(
-                            frame, use_smoothing=True
-                        )
+                    if self.finger_detection_enabled:
+                        # Detect hand
+                        if self.detector_type == "mediapipe":
+                            detect_result = self.detector.detect_hand(frame)
+                        else:
+                            if config.USE_PALM_DETECTION:
+                                detect_result = self.detector.detect_hand_with_palm_center(
+                                    frame, use_smoothing=True
+                                )
+                            else:
+                                detect_result = self.detector.detect_hand(
+                                    frame, use_smoothing=True
+                                )
+                        
+                        # Update hand_info with detection results
+                        hand_info.update(detect_result)
+                        
+
+                        # Count fingers if hand detected
+                        if hand_info['detected']:
+                            if self.detector_type == "mediapipe":
+                                 hand_info['finger_count'] = self.detector.count_fingers(hand_info['landmarks'])
+                            else:
+                                 hand_info['finger_count'] = self.detector.count_fingers(hand_info['contour'])
+                        
+                        # Update Game Mode based on fingers
+                        finger_count = hand_info.get('finger_count', 0)
+                        self.update_game_mode(finger_count)
+                        
+                        # Map to column
+                        if hand_info['detected'] and hand_info['x'] is not None:
+                            self.basket_col = self.mapper.map_to_column(hand_info['x'], config.CAMERA_WIDTH)
                     else:
-                        detect_result = self.detector.detect_hand(
-                            frame, use_smoothing=True
-                        )
+                        # Finger detection disabled - Force Normal Speed
+                        # Still detect hand for movement!
+                        if self.detector_type == "mediapipe":
+                             detect_result = self.detector.detect_hand(frame)
+                        else:
+                            if config.USE_PALM_DETECTION:
+                                detect_result = self.detector.detect_hand_with_palm_center(
+                                    frame, use_smoothing=True
+                                )
+                            else:
+                                detect_result = self.detector.detect_hand(
+                                    frame, use_smoothing=True
+                                )
+                        
+                        hand_info.update(detect_result)
+                        
+                        # Map to column
+                        if hand_info['detected'] and hand_info['x'] is not None:
+                            self.basket_col = self.mapper.map_to_column(hand_info['x'], config.CAMERA_WIDTH)
+
+                        self.current_mode_name = "NORMAL"
+                        self.speed_multiplier = config.MODE_NORMAL_MULTIPLIER
+                        self.score_multiplier = config.MODE_NORMAL_MULTIPLIER
+                        # hand_info remains with default values (detected=False)
+                        finger_count = 0 # No fingers detected
                     
-                    # Update hand_info with detection results
-                    hand_info.update(detect_result)
+                    # ALWAYS Draw ROI line (User Request)
+                    cv2.line(frame, (0, roi_start_y), (config.CAMERA_WIDTH, roi_start_y), config.ROI_COLOR, 2)
+
                     
-                    # Count fingers if hand detected
-                    if hand_info['detected']:
-                        hand_info['finger_count'] = self.detector.count_fingers(hand_info['contour'])
+                    # Spawn balls (Time interval + Minimum Vertical Spacing check)
+                    current_time = cv2.getTickCount() / cv2.getTickFrequency()
+                    spawn_interval = self.base_spawn_interval / self.speed_multiplier
+
+                    # Check vertical spacing of last ball
+                    can_spawn = True
+                    if self.balls:
+                        last_ball = self.balls[-1]
+                        if last_ball['y'] < config.MIN_VERTICAL_SPACING:
+                            can_spawn = False
                     
-                    # Update Game Mode based on fingers
-                    finger_count = hand_info.get('finger_count', 0)
-                    self.update_game_mode(finger_count)
+                    if can_spawn and (current_time - self.last_spawn > spawn_interval):
+                        self.spawn_ball()
+                        self.last_spawn = current_time
                     
-                    # Map to column
-                    if hand_info['detected'] and hand_info['x'] is not None:
-                        self.basket_col = self.mapper.map_to_column(hand_info['x'], config.CAMERA_WIDTH)
+                    # Update balls
+                    self.update_balls()
+                    
+                    # Decrease bomb effect frame counter
+                    if self.bomb_effect_frame > 0:
+                        self.bomb_effect_frame -= 1
+                    
+                    # Check game over
+                    if self.timer.is_over():
+                        self.game_over = True
+                        if self.lives > 0:
+                            self.game_won = True
+                    
+                    # Render game
+                    self.renderer.render_ui(
+                        frame, self.balls, self.basket_col,
+                        self.score, self.lives, self.timer.time_left(),
+                        self.bomb_effect_frame,
+                        finger_count=hand_info.get('finger_count'),
+                        mode_name=self.current_mode_name,
+                        speed_multiplier=self.speed_multiplier
+                    )
+                    
+                    # Draw hand visual feedback
+                    self.renderer.draw_hand(frame, hand_info)
+                    
+                    # Draw debug info
+                    self.draw_debug_info(frame, hand_info)
+                    
+                    # Show FPS
+                    if config.SHOW_FPS:
+                        self.calculate_fps()
+                        cv2.putText(frame, f"FPS: {self.fps:.1f}", (config.CAMERA_WIDTH - 120, 90),
+                                   cv2.FONT_HERSHEY_SIMPLEX, 0.6, config.TEXT_COLOR, 2)
                 else:
-                    # Finger detection disabled - Force Normal Speed
-                    # Still detect hand for movement!
-                    if config.USE_PALM_DETECTION:
-                        detect_result = self.detector.detect_hand_with_palm_center(
-                            frame, use_smoothing=True
-                        )
-                    else:
-                        detect_result = self.detector.detect_hand(
-                            frame, use_smoothing=True
-                        )
-                    
-                    hand_info.update(detect_result)
-                    
-                    # Map to column
-                    if hand_info['detected'] and hand_info['x'] is not None:
-                        self.basket_col = self.mapper.map_to_column(hand_info['x'], config.CAMERA_WIDTH)
-
-                    self.current_mode_name = "NORMAL"
-                    self.speed_multiplier = config.MODE_NORMAL_MULTIPLIER
-                    self.score_multiplier = config.MODE_NORMAL_MULTIPLIER
-                    # hand_info remains with default values (detected=False)
-                    finger_count = 0 # No fingers detected
+                    # Game over screen
+                    self.renderer.draw_game_over(frame, self.score, is_win=self.game_won)
                 
-                # ALWAYS Draw ROI line (User Request)
-                cv2.line(frame, (0, roi_start_y), (config.CAMERA_WIDTH, roi_start_y), config.ROI_COLOR, 2)
-
+                # Show frame
+                cv2.imshow(config.WINDOW_NAME, frame)
                 
-                # Spawn balls (Time interval + Minimum Vertical Spacing check)
-                current_time = cv2.getTickCount() / cv2.getTickFrequency()
-                spawn_interval = self.base_spawn_interval / self.speed_multiplier
-
-                # Check vertical spacing of last ball
-                can_spawn = True
-                if self.balls:
-                    last_ball = self.balls[-1]
-                    if last_ball['y'] < config.MIN_VERTICAL_SPACING:
-                        can_spawn = False
-                
-                if can_spawn and (current_time - self.last_spawn > spawn_interval):
-                    self.spawn_ball()
-                    self.last_spawn = current_time
-                
-                # Update balls
-                self.update_balls()
-                
-                # Decrease bomb effect frame counter
-                if self.bomb_effect_frame > 0:
-                    self.bomb_effect_frame -= 1
-                
-                # Check game over
-                if self.timer.is_over():
-                    self.game_over = True
-                    if self.lives > 0:
-                        self.game_won = True
-                
-                # Render game
-                self.renderer.render_ui(
-                    frame, self.balls, self.basket_col,
-                    self.score, self.lives, self.timer.time_left(),
-                    self.bomb_effect_frame,
-                    finger_count=hand_info.get('finger_count'),
-                    mode_name=self.current_mode_name,
-                    speed_multiplier=self.speed_multiplier
-                )
-                
-                # Draw hand visual feedback
-                self.renderer.draw_hand(frame, hand_info)
-                
-                # Draw debug info
-                self.draw_debug_info(frame, hand_info)
-                
-                # Show FPS
-                if config.SHOW_FPS:
-                    self.calculate_fps()
-                    cv2.putText(frame, f"FPS: {self.fps:.1f}", (config.CAMERA_WIDTH - 120, 90),
-                               cv2.FONT_HERSHEY_SIMPLEX, 0.6, config.TEXT_COLOR, 2)
-            else:
-                # Game over screen
-                self.renderer.draw_game_over(frame, self.score, is_win=self.game_won)
-            
-            # Show frame
-            cv2.imshow(config.WINDOW_NAME, frame)
-            
-            # Handle keyboard input
-            key = cv2.waitKey(1) & 0xFF
-            if key == ord('q'):
-                break
-            elif key == ord('r') and self.game_over:
-                self.restart()
-            elif key == ord('d'):
-                config.SHOW_DEBUG_INFO = not config.SHOW_DEBUG_INFO
-                print(f"Debug info: {'ON' if config.SHOW_DEBUG_INFO else 'OFF'}")
-            elif key == ord(' '):
-                self.finger_detection_enabled = not self.finger_detection_enabled
-                print(f"Finger Detection: {'ON' if self.finger_detection_enabled else 'OFF'}")
-                if not self.finger_detection_enabled:
-                    print("-> Switched to NORMAL speed mode")
+                # Handle keyboard input
+                key = cv2.waitKey(1) & 0xFF
+                if key == ord('q'):
+                    self.cap.release()
+                    cv2.destroyAllWindows()
+                    print("\n" + "=" * 80)
+                    print("GAME OVER!")
+                    print(f"Final Score: {self.score}")
+                    print("=" * 80)
+                    return # Exit function
+                elif key == ord('r') and self.game_over:
+                    break # Break inner loop to return to Mode Selection
+                elif key == ord('d'):
+                    config.SHOW_DEBUG_INFO = not config.SHOW_DEBUG_INFO
+                    print(f"Debug info: {'ON' if config.SHOW_DEBUG_INFO else 'OFF'}")
+                elif key == ord(' '):
+                    self.finger_detection_enabled = not self.finger_detection_enabled
+                    print(f"Finger Detection: {'ON' if self.finger_detection_enabled else 'OFF'}")
+                    if not self.finger_detection_enabled:
+                        print("-> Switched to NORMAL speed mode")
         
-        self.cap.release()
-        cv2.destroyAllWindows()
-        
-        print("\n" + "=" * 80)
-        print("GAME OVER!")
-        print(f"Final Score: {self.score}")
-        print("=" * 80)
-    
-    def restart(self):
-        """Restart the game."""
+    def reset_game_state(self):
+        """Reset the game state for a new round."""
         self.score = 0
         self.lives = config.STARTING_LIVES
         self.balls = []
@@ -379,10 +427,8 @@ class VirtualHandGame:
         self.game_won = False
         self.bomb_effect_frame = 0
         self.timer.reset()
-        self.timer.start()
         self.mapper.reset()
         self.detector.reset()
-        print("\nGame restarted!")
 
 if __name__ == '__main__':
     game = VirtualHandGame()

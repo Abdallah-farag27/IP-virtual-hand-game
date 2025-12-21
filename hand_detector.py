@@ -1,5 +1,6 @@
 import cv2
 import numpy as np
+import math
 
 class HandDetector:
     """
@@ -322,6 +323,94 @@ class HandDetector:
                 result['y'] = frame_height - 100
         
         return result
+
+    def count_fingers(self, contour):
+        """
+        Count fingers using convexity defects.
+        
+        Args:
+            contour: Hand contour
+            
+        Returns:
+            Number of fingers extended (0-5)
+        """
+        if contour is None:
+            return 0
+            
+        # Hull with indices
+        hull = cv2.convexHull(contour, returnPoints=False)
+        
+        # Need at least 3 points for defects
+        if len(hull) < 3:
+            return 0
+            
+        # Get defects
+        # defects[i] = [start_index, end_index, farthest_pt_index, fixpt_depth]
+        defects = cv2.convexityDefects(contour, hull)
+        
+        if defects is None:
+            return 0
+            
+        count = 0
+        
+        # Use simple logic: number of fingers = number of deep defects + 1
+        # But we need to filter defects carefully
+        
+        for i in range(defects.shape[0]):
+            s, e, f, d = defects[i, 0]
+            start = tuple(contour[s][0])
+            end = tuple(contour[e][0])
+            far = tuple(contour[f][0])
+            
+            # Depth of the defect (distance from hull to contour)
+            # defects returns fixed point depth (scaled by 256)
+            depth = d / 256.0
+            
+            # Only consider deep defects (gaps between fingers)
+            if depth > 30:  # Increased threshold to reduce flickering (was 20)
+                # Calculate sides of the triangle formed by start, end, far
+                a = math.sqrt((end[0] - start[0])**2 + (end[1] - start[1])**2)
+                b = math.sqrt((far[0] - start[0])**2 + (far[1] - start[1])**2)
+                c = math.sqrt((end[0] - far[0])**2 + (end[1] - far[1])**2)
+                
+                # Apply cosine rule to find angle at the 'far' point (the gap)
+                # We want acute angles (between fingers)
+                if b * c > 0: # Avoid division by zero
+                    angle = math.acos((b**2 + c**2 - a**2) / (2 * b * c))
+                    angle = angle * 180 / math.pi
+                    
+                    # Angle between fingers is usually less than 90 degrees
+                    if angle < 90:
+                        count += 1
+                        
+        # If we found defects, it means we have fingers up.
+        # N defects usually means N+1 fingers.
+        if count > 0:
+            return count + 1
+        
+        # Special case: 0 defects usually means 0 fingers (fist) or 1 finger.
+        # Distinguish using shape properties.
+        if count == 0:
+            x, y, w, h = cv2.boundingRect(contour)
+            aspect_ratio = h / float(w)
+            
+            area = cv2.contourArea(contour)
+            hull_points = cv2.convexHull(contour, returnPoints=True)
+            hull_area = cv2.contourArea(hull_points)
+            solidity = float(area) / hull_area if hull_area > 0 else 0
+            
+            # Heuristic: 
+            # 1 Finger is usually "tall" (High aspect ratio) AND/OR has lower solidity (not a perfect blob) due to the stick shape.
+            # Fist is usually a "blob" (Square-ish aspect ratio, High solidity).
+            
+            # If height is significantly larger than width (tall), typically 1 finger up.
+            # OR if solidity is low (meaning hull is much larger than contour), it's likely a finger sticking out.
+            if aspect_ratio > 1.3 or solidity < 0.88:
+                return 1
+                
+            return 0
+        
+        return 0
 
     
     def reset(self):

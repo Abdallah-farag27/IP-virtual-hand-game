@@ -61,6 +61,15 @@ MORPH_CLOSE_ITERATIONS = 2  # Number of closing iterations (fills holes)
 MORPH_DILATE_ITERATIONS = 1 # Number of dilation iterations (expands hand)
 
 # ============================================================================
+# GAME MODES
+# ============================================================================
+# Multipliers for Speed and Score based on finger count
+MODE_SLOW_MULTIPLIER = 0.5   # 0 fingers (Fist)
+MODE_NORMAL_MULTIPLIER = 1.0 # 1-2 fingers
+MODE_FAST_MULTIPLIER = 1.5   # 3 fibers
+MODE_TURBO_MULTIPLIER = 2.0  # 4-5 fingers
+
+# ============================================================================
 # GAME SETTINGS
 # ============================================================================
 
@@ -78,6 +87,9 @@ GAME_DURATION = 90      # Game duration in seconds
 BALL_SPAWN_INTERVAL = 1.0   # Time between ball spawns (seconds)
                             # Lower = more balls, harder game
                             # Higher = fewer balls, easier game
+
+MIN_VERTICAL_SPACING = 200  # Minimum vertical distance between balls (pixels)
+                            # Prevents overlapping objects
 
 BOMB_PROBABILITY = 0.2  # Probability of spawning a bomb (0.0-1.0)
                         # 0.2 = 20% chance of bomb

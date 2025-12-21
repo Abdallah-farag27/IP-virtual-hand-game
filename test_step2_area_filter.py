@@ -244,6 +244,11 @@ class TestStep2AreaFilter:
             area = cv2.contourArea(hand_info['contour'])
             cv2.putText(panel3, f"Area: {int(area)}", (x, y + roi_y - 10),
                        cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 0), 2)
+                       
+            # Show finger count
+            if 'finger_count' in hand_info:
+                 cv2.putText(panel3, f"Fingers: {hand_info['finger_count']}", (x, y + roi_y - 35),
+                       cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 255, 255), 2)
         else:
             cv2.putText(panel3, "NO VALID HAND DETECTED", (frame_width // 2 - 200, frame_height // 2),
                        cv2.FONT_HERSHEY_SIMPLEX, 1.0, (0, 0, 255), 3)
@@ -340,6 +345,10 @@ class TestStep2AreaFilter:
             
             # Detect hand
             hand_info = self.detector.detect_hand(frame, use_smoothing=False)
+            
+            # Count fingers if hand detected
+            if hand_info['detected']:
+                hand_info['finger_count'] = self.detector.count_fingers(hand_info['contour'])
             
             # Calculate FPS
             self.calculate_fps()

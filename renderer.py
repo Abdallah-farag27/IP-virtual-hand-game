@@ -102,7 +102,7 @@ class Renderer:
                 background = cv2.bitwise_and(roi, roi, mask=cv2.bitwise_not(mask))
                 roi[:] = cv2.add(background, ball_overlay)
     
-    def draw_ui_info(self, frame, score, lives, time_left):
+    def draw_ui_info(self, frame, score, lives, time_left, finger_count=None, mode_name="NORMAL", speed_multiplier=None):
         # Dark background panel
         cv2.rectangle(frame, (0, 0), (self.width, 60), (40, 40, 40), -1)
         
@@ -114,6 +114,24 @@ class Renderer:
         lives_text = f"Lives: {lives}"
         cv2.putText(frame, lives_text, (self.width//2 - 80, 40), 
                     cv2.FONT_HERSHEY_SIMPLEX, 1, self.TEXT_COLOR, 2)
+                    
+        # Mode & Fingers
+        mode_color = (0, 255, 0)
+        if mode_name == "SLOW-MO": mode_color = (255, 255, 0)
+        elif mode_name == "FAST": mode_color = (0, 165, 255)
+        elif mode_name == "TURBO": mode_color = (0, 0, 255)
+        
+        if finger_count is not None:
+             cv2.putText(frame, f"Fingers: {finger_count}", (self.width//2 + 100, 40), 
+                    cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 255), 2)
+             # Display mode below fingers
+             cv2.putText(frame, f"MODE: {mode_name}", (self.width//2 + 100, 80), 
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.7, mode_color, 2)
+             
+             # Display speed below mode
+             if speed_multiplier is not None:
+                 cv2.putText(frame, f"Speed: {speed_multiplier:.1f}x", (self.width//2 + 100, 110), 
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.6, (200, 200, 200), 1)
         
         # Timer
         time_str = f"Time: {int(time_left)}s"
@@ -165,15 +183,48 @@ class Renderer:
                 text_y = y_center - radius - 20
                 cv2.putText(frame, text, (text_x, text_y), font, 1.5, (0, 0, 255), 4)
     
-    def render_ui(self, frame, balls, basket_col, score, lives, time_left, bomb_effect_frame=0):
+    def render_ui(self, frame, balls, basket_col, score, lives, time_left, bomb_effect_frame=0, finger_count=None, mode_name="NORMAL", speed_multiplier=None):
+        """Render all game UI elements."""
+        # Draw columns
         self.draw_column_dividers(frame)
-        self.draw_net(frame, basket_col)
-        self.draw_balls(frame, balls)
-        self.draw_ui_info(frame, score, lives, time_left)
         
-        # Draw bomb explosion effect if active
-        if bomb_effect_frame > 0:
-            self.draw_bomb_effect(frame, basket_col, bomb_effect_frame)
+        # Draw net
+        self.draw_net(frame, basket_col)
+        
+        # Draw balls
+        self.draw_balls(frame, balls)
+        
+        # Draw bomb effect
+        self.draw_bomb_effect(frame, basket_col, bomb_effect_frame)
+        
+        # Draw top info bar
+        self.draw_ui_info(frame, score, lives, time_left, finger_count, mode_name, speed_multiplier)
+            
+    def draw_hand(self, frame, hand_info):
+        """Draw hand contour and center for visual feedback."""
+        if not hand_info['detected']:
+            return
+            
+        roi_y = hand_info['roi_start_y']
+        
+        # 1. Draw Contour
+        if hand_info['contour'] is not None:
+            contour_offset = hand_info['contour'].copy()
+            contour_offset[:, :, 1] += roi_y
+            # Green contour
+            cv2.drawContours(frame, [contour_offset], -1, (0, 255, 0), 2)
+            
+        # 2. Draw Center Point
+        cx, cy = hand_info['x'], hand_info['y']
+        # Green center dot
+        cv2.circle(frame, (cx, cy), 8, (0, 255, 0), -1)
+        # White ring outline
+        cv2.circle(frame, (cx, cy), 12, (255, 255, 255), 2)
+        
+        # 3. Draw Palm Radius (optional visual aid)
+        if 'palm_radius' in hand_info:
+            radius = int(hand_info['palm_radius'])
+            cv2.circle(frame, (cx, cy), radius, (255, 0, 255), 1)
     
     def draw_game_over(self, frame, final_score):
         # Semi-transparent dark overlay

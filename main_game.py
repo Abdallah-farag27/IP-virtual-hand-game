@@ -58,9 +58,14 @@ class VirtualHandGame:
         self.basket_col = config.NUM_COLUMNS // 2  # Start at center
         self.game_over = False
         
+        # Game Modes & Multipliers
+        self.current_mode_name = "NORMAL"
+        self.speed_multiplier = 1.0
+        self.score_multiplier = 1.0
+        
         # Ball spawning
         self.last_spawn = 0
-        self.spawn_interval = config.BALL_SPAWN_INTERVAL
+        self.base_spawn_interval = config.BALL_SPAWN_INTERVAL
         
         # Bomb effect
         self.bomb_effect_frame = 0
@@ -79,6 +84,25 @@ class VirtualHandGame:
             self.fps = self.frame_count / elapsed
             self.frame_count = 0
             self.fps_start_time = current_time
+            
+    def update_game_mode(self, finger_count):
+        """Update game mode based on finger count."""
+        if finger_count <= 2:
+            self.current_mode_name = "SLOW-MO"
+            self.speed_multiplier = config.MODE_SLOW_MULTIPLIER
+            self.score_multiplier = config.MODE_SLOW_MULTIPLIER
+        elif finger_count == 3:
+            self.current_mode_name = "NORMAL"
+            self.speed_multiplier = config.MODE_NORMAL_MULTIPLIER
+            self.score_multiplier = config.MODE_NORMAL_MULTIPLIER
+        elif finger_count == 4:
+            self.current_mode_name = "FAST"
+            self.speed_multiplier = config.MODE_FAST_MULTIPLIER
+            self.score_multiplier = config.MODE_FAST_MULTIPLIER
+        elif finger_count == 5:
+            self.current_mode_name = "TURBO"
+            self.speed_multiplier = config.MODE_TURBO_MULTIPLIER
+            self.score_multiplier = config.MODE_TURBO_MULTIPLIER
     
     def spawn_ball(self):
         """Spawn a new ball or bomb."""
@@ -86,12 +110,15 @@ class VirtualHandGame:
         col_width = config.CAMERA_WIDTH / config.NUM_COLUMNS
         x = int(col * col_width + col_width / 2)
         
+        # Adjust speed based on multiplier
+        speed = config.BALL_SPEED * self.speed_multiplier
+        
         ball = {
             'x': x,
             'y': 70,
             'col': col,
             'type': 'bomb' if random.random() < config.BOMB_PROBABILITY else 'regular',
-            'speed': config.BALL_SPEED
+            'speed': speed
         }
         self.balls.append(ball)
     
@@ -100,6 +127,8 @@ class VirtualHandGame:
         to_remove = []
         
         for i, ball in enumerate(self.balls):
+            # Update speed dynamically too (keeps things responsive)
+            ball['speed'] = config.BALL_SPEED * self.speed_multiplier
             ball['y'] += ball['speed']
             
             # Check collision at net level
@@ -166,6 +195,12 @@ class VirtualHandGame:
             cv2.putText(frame, f"Hand: ({cx}, {cy})", (10, y_pos),
                        cv2.FONT_HERSHEY_SIMPLEX, 0.5, config.TEXT_COLOR, 1)
             y_pos += line_height
+            
+            # Finger count
+            if 'finger_count' in hand_info:
+                cv2.putText(frame, f"Fingers: {hand_info['finger_count']}", (10, y_pos),
+                           cv2.FONT_HERSHEY_SIMPLEX, 0.5, config.TEXT_COLOR, 1)
+                y_pos += line_height
         
         # Basket column
         cv2.putText(frame, f"Basket: Col {self.basket_col}", (10, y_pos),
@@ -215,13 +250,30 @@ class VirtualHandGame:
                         frame, use_smoothing=True
                     )
                 
+                # Count fingers if hand detected
+                if hand_info['detected']:
+                    hand_info['finger_count'] = self.detector.count_fingers(hand_info['contour'])
+                
+                # Update Game Mode based on fingers
+                finger_count = hand_info.get('finger_count', 0)
+                self.update_game_mode(finger_count)
+                
                 # Map to column
                 if hand_info['detected'] and hand_info['x'] is not None:
                     self.basket_col = self.mapper.map_to_column(hand_info['x'], config.CAMERA_WIDTH)
                 
-                # Spawn balls
+                # Spawn balls (Time interval + Minimum Vertical Spacing check)
                 current_time = cv2.getTickCount() / cv2.getTickFrequency()
-                if current_time - self.last_spawn > self.spawn_interval:
+                spawn_interval = self.base_spawn_interval / self.speed_multiplier
+
+                # Check vertical spacing of last ball
+                can_spawn = True
+                if self.balls:
+                    last_ball = self.balls[-1]
+                    if last_ball['y'] < config.MIN_VERTICAL_SPACING:
+                        can_spawn = False
+                
+                if can_spawn and (current_time - self.last_spawn > spawn_interval):
                     self.spawn_ball()
                     self.last_spawn = current_time
                 
@@ -240,8 +292,14 @@ class VirtualHandGame:
                 self.renderer.render_ui(
                     frame, self.balls, self.basket_col,
                     self.score, self.lives, self.timer.time_left(),
-                    self.bomb_effect_frame
+                    self.bomb_effect_frame,
+                    finger_count=hand_info.get('finger_count'),
+                    mode_name=self.current_mode_name,
+                    speed_multiplier=self.speed_multiplier
                 )
+                
+                # Draw hand visual feedback
+                self.renderer.draw_hand(frame, hand_info)
                 
                 # Draw debug info
                 self.draw_debug_info(frame, hand_info)

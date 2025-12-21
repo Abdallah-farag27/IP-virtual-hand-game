@@ -5,17 +5,6 @@ from column_mapper import ColumnMapper
 from renderer import Renderer
 
 class TestAllSteps:
-    """
-    Comprehensive test showing all hand detection improvements together.
-    
-    This combines:
-    - Step 1: ROI Restriction
-    - Step 2: Contour Area Filtering
-    - Step 3: Temporal Smoothing
-    - Step 4: Distance Transform Palm Detection
-    - Step 5: 3-Column Layout
-    """
-    
     def __init__(self):
         self.cap = cv2.VideoCapture(0)
         self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, 960)
@@ -50,7 +39,6 @@ class TestAllSteps:
         self.column_labels = ["LEFT", "CENTER", "RIGHT"]
     
     def calculate_fps(self):
-        """Calculate and update FPS."""
         self.frame_count += 1
         if self.frame_count >= 10:
             current_time = cv2.getTickCount()
@@ -60,7 +48,6 @@ class TestAllSteps:
             self.fps_start_time = current_time
     
     def create_info_panel(self, width, height, hand_info):
-        """Create information panel showing all active features."""
         panel = np.zeros((height, width, 3), dtype=np.uint8)
         
         y_pos = 60
@@ -146,16 +133,6 @@ class TestAllSteps:
         return panel
     
     def create_visualization(self, frame, hand_info):
-        """
-        Create comprehensive visualization.
-        
-        Args:
-            frame: Original frame
-            hand_info: Hand detection result
-            
-        Returns:
-            Combined visualization image
-        """
         frame_height, frame_width = frame.shape[:2]
         roi_y = hand_info['roi_start_y']
         

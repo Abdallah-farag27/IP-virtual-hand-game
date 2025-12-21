@@ -4,16 +4,6 @@ from hand_detector import HandDetector
 import collections
 
 class TestStep3Smoothing:
-    """
-    Test Step 3: Temporal Smoothing
-    
-    This test shows:
-    1. Raw hand position (without smoothing)
-    2. Smoothed hand position (with exponential smoothing)
-    3. Position history graph
-    4. Comparison of jitter between raw and smoothed
-    """
-    
     def __init__(self):
         self.cap = cv2.VideoCapture(0)
         self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, 960)
@@ -51,7 +41,6 @@ class TestStep3Smoothing:
         self.fps_start_time = cv2.getTickCount()
     
     def calculate_fps(self):
-        """Calculate and update FPS."""
         self.frame_count += 1
         if self.frame_count >= 10:
             current_time = cv2.getTickCount()
@@ -61,15 +50,6 @@ class TestStep3Smoothing:
             self.fps_start_time = current_time
     
     def calculate_jitter(self, history):
-        """
-        Calculate jitter as average absolute difference between consecutive frames.
-        
-        Args:
-            history: Deque of x-coordinates
-            
-        Returns:
-            Average jitter value
-        """
         if len(history) < 2:
             return 0
         
@@ -77,16 +57,6 @@ class TestStep3Smoothing:
         return sum(diffs) / len(diffs) if diffs else 0
     
     def draw_graph(self, width, height):
-        """
-        Draw position history graph.
-        
-        Args:
-            width: Graph width
-            height: Graph height
-            
-        Returns:
-            Graph image
-        """
         graph = np.zeros((height, width, 3), dtype=np.uint8)
         
         if len(self.raw_x_history) < 2:
@@ -142,17 +112,6 @@ class TestStep3Smoothing:
         return graph
     
     def create_visualization(self, frame, raw_info, smooth_info):
-        """
-        Create multi-panel visualization.
-        
-        Args:
-            frame: Original frame
-            raw_info: Raw detection result
-            smooth_info: Smoothed detection result
-            
-        Returns:
-            Combined visualization image
-        """
         frame_height, frame_width = frame.shape[:2]
         roi_y = raw_info['roi_start_y']
         

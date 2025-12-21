@@ -3,16 +3,6 @@ import numpy as np
 from hand_detector import HandDetector
 
 class TestStep2AreaFilter:
-    """
-    Test Step 2: Contour Area Filtering
-    
-    This test shows:
-    1. All detected contours with area labels
-    2. Valid contours (within size range) highlighted
-    3. Rejected contours (too small/large) shown in different colors
-    4. Final selected hand contour
-    """
-    
     def __init__(self):
         self.cap = cv2.VideoCapture(0)
         self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, 960)
@@ -31,7 +21,6 @@ class TestStep2AreaFilter:
         self.fps_start_time = cv2.getTickCount()
     
     def calculate_fps(self):
-        """Calculate and update FPS."""
         self.frame_count += 1
         if self.frame_count >= 10:
             current_time = cv2.getTickCount()
@@ -41,12 +30,6 @@ class TestStep2AreaFilter:
             self.fps_start_time = current_time
     
     def get_all_contours_info(self, frame):
-        """
-        Get information about all contours for visualization.
-        
-        Returns:
-            Dictionary with contour classification
-        """
         frame_height, frame_width = frame.shape[:2]
         roi_start_y, roi_end_y = self.detector.get_roi_bounds(frame_height)
         roi = frame[roi_start_y:roi_end_y, :]
@@ -87,17 +70,6 @@ class TestStep2AreaFilter:
         }
     
     def create_visualization(self, frame, contour_info, hand_info):
-        """
-        Create multi-panel visualization.
-        
-        Args:
-            frame: Original frame
-            contour_info: Contour classification info
-            hand_info: Hand detection result
-            
-        Returns:
-            Combined visualization image
-        """
         frame_height, frame_width = frame.shape[:2]
         roi_y = contour_info['roi_start_y']
         
@@ -244,6 +216,11 @@ class TestStep2AreaFilter:
             area = cv2.contourArea(hand_info['contour'])
             cv2.putText(panel3, f"Area: {int(area)}", (x, y + roi_y - 10),
                        cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 0), 2)
+                       
+            # Show finger count
+            if 'finger_count' in hand_info:
+                 cv2.putText(panel3, f"Fingers: {hand_info['finger_count']}", (x, y + roi_y - 35),
+                       cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 255, 255), 2)
         else:
             cv2.putText(panel3, "NO VALID HAND DETECTED", (frame_width // 2 - 200, frame_height // 2),
                        cv2.FONT_HERSHEY_SIMPLEX, 1.0, (0, 0, 255), 3)
@@ -340,6 +317,10 @@ class TestStep2AreaFilter:
             
             # Detect hand
             hand_info = self.detector.detect_hand(frame, use_smoothing=False)
+            
+            # Count fingers if hand detected
+            if hand_info['detected']:
+                hand_info['finger_count'] = self.detector.count_fingers(hand_info['contour'])
             
             # Calculate FPS
             self.calculate_fps()

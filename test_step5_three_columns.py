@@ -5,16 +5,6 @@ from column_mapper import ColumnMapper
 from renderer import Renderer
 
 class TestStep5ThreeColumns:
-    """
-    Test Step 5: Reduce Columns (4 → 3)
-    
-    This test shows:
-    1. Hand detection with ROI and all improvements
-    2. 3-column layout (Left - Center - Right)
-    3. Smoother basket movement
-    4. Comparison with 4-column layout
-    """
-    
     def __init__(self):
         self.cap = cv2.VideoCapture(0)
         self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, 960)
@@ -50,7 +40,6 @@ class TestStep5ThreeColumns:
         self.labels_4col = ["LEFT", "CENTER-LEFT", "CENTER-RIGHT", "RIGHT"]
     
     def calculate_fps(self):
-        """Calculate and update FPS."""
         self.frame_count += 1
         if self.frame_count >= 10:
             current_time = cv2.getTickCount()
@@ -60,18 +49,6 @@ class TestStep5ThreeColumns:
             self.fps_start_time = current_time
     
     def draw_column_overlay(self, frame, num_cols, basket_col, labels):
-        """
-        Draw column grid overlay with basket position.
-        
-        Args:
-            frame: Frame to draw on
-            num_cols: Number of columns
-            basket_col: Current basket column
-            labels: Column labels
-            
-        Returns:
-            Frame with overlay
-        """
         frame_height, frame_width = frame.shape[:2]
         col_width = frame_width / num_cols
         
@@ -115,16 +92,6 @@ class TestStep5ThreeColumns:
         return result
     
     def create_visualization(self, frame, hand_info):
-        """
-        Create multi-panel visualization.
-        
-        Args:
-            frame: Original frame
-            hand_info: Hand detection result
-            
-        Returns:
-            Combined visualization image
-        """
         frame_height, frame_width = frame.shape[:2]
         roi_y = hand_info['roi_start_y']
         

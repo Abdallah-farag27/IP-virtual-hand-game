@@ -3,16 +3,6 @@ import numpy as np
 from hand_detector import HandDetector
 
 class TestStep4DistanceTransform:
-    """
-    Test Step 4: Distance Transform Palm Detection
-    
-    This test shows:
-    1. Centroid-based detection (traditional method)
-    2. Distance transform-based palm detection (more stable)
-    3. Distance transform heatmap visualization
-    4. Comparison of stability between methods
-    """
-    
     def __init__(self):
         self.cap = cv2.VideoCapture(0)
         self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, 960)
@@ -37,7 +27,6 @@ class TestStep4DistanceTransform:
         self.fps_start_time = cv2.getTickCount()
     
     def calculate_fps(self):
-        """Calculate and update FPS."""
         self.frame_count += 1
         if self.frame_count >= 10:
             current_time = cv2.getTickCount()
@@ -47,17 +36,6 @@ class TestStep4DistanceTransform:
             self.fps_start_time = current_time
     
     def create_heatmap(self, dist_transform, width, height):
-        """
-        Create colored heatmap from distance transform.
-        
-        Args:
-            dist_transform: Distance transform image
-            width: Output width
-            height: Output height
-            
-        Returns:
-            Colored heatmap image
-        """
         if dist_transform is None:
             return np.zeros((height, width, 3), dtype=np.uint8)
         
@@ -71,17 +49,6 @@ class TestStep4DistanceTransform:
         return heatmap
     
     def create_visualization(self, frame, centroid_info, palm_info):
-        """
-        Create multi-panel visualization.
-        
-        Args:
-            frame: Original frame
-            centroid_info: Centroid-based detection result
-            palm_info: Palm center detection result
-            
-        Returns:
-            Combined visualization image
-        """
         frame_height, frame_width = frame.shape[:2]
         roi_y = centroid_info['roi_start_y']
         

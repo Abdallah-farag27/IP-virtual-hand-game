@@ -223,6 +223,14 @@ class Renderer:
         if 'palm_radius' in hand_info:
             radius = int(hand_info['palm_radius'])
             cv2.circle(frame, (cx, cy), radius, (255, 0, 255), 1)
+            
+        # 4. MediaPipe Landmarks
+        if hand_info.get('type') == 'mediapipe' and hand_info.get('landmarks'):
+             import mediapipe as mp
+             mp_draw = mp.solutions.drawing_utils
+             mp_hands = mp.solutions.hands
+             mp_draw.draw_landmarks(frame, hand_info['landmarks'], mp_hands.HAND_CONNECTIONS)
+
     
     def draw_game_over(self, frame, final_score, is_win=False):
         # Semi-transparent dark overlay
@@ -253,9 +261,32 @@ class Renderer:
                     cv2.FONT_HERSHEY_SIMPLEX, 1.5, self.TEXT_COLOR, 3)
         
         # Instructions
-        inst_text = "Press 'R' to restart or 'Q' to quit"
+        inst_text = "Press 'R' for Menu or 'Q' to Quit"
         inst_size = cv2.getTextSize(inst_text, cv2.FONT_HERSHEY_SIMPLEX, 0.9, 2)[0]
         inst_x = (self.width - inst_size[0]) // 2
         inst_y = score_y + 70
         cv2.putText(frame, inst_text, (inst_x, inst_y), 
                     cv2.FONT_HERSHEY_SIMPLEX, 0.9, self.TEXT_COLOR, 2)
+    def draw_start_screen(self, frame):
+        # Dark overlay
+        overlay = frame.copy()
+        cv2.rectangle(overlay, (0, 0), (self.width, self.height), (0, 0, 0), -1)
+        cv2.addWeighted(overlay, 0.85, frame, 0.15, 0, frame)
+        
+        # Title
+        title = "SELECT GAME MODE"
+        font = cv2.FONT_HERSHEY_SIMPLEX
+        title_size = cv2.getTextSize(title, font, 2, 4)[0]
+        cv2.putText(frame, title, ((self.width - title_size[0])//2, 200), font, 2, (255, 255, 255), 4)
+        
+        # Options
+        opt1 = "1. Classic (Image Processing)"
+        opt2 = "2. AI (MediaPipe)"
+        
+        cv2.putText(frame, opt1, (200, 350), font, 1.2, (0, 255, 255), 2)
+        cv2.putText(frame, opt2, (200, 450), font, 1.2, (0, 255, 0), 2)
+        
+        # Instructions
+        inst = "Press 1 or 2 to start"
+        inst_size = cv2.getTextSize(inst, font, 1, 2)[0]
+        cv2.putText(frame, inst, ((self.width - inst_size[0])//2, 600), font, 1, (200, 200, 200), 2)

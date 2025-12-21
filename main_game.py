@@ -78,7 +78,7 @@ class VirtualHandGame:
     def calculate_fps(self):
         """Calculate and update FPS."""
         self.frame_count += 1
-        if self.frame_count >= 10:
+        if self.frame_count >= config.FPS_UPDATE_INTERVAL_FRAMES:
             current_time = cv2.getTickCount()
             elapsed = (current_time - self.fps_start_time) / cv2.getTickFrequency()
             self.fps = self.frame_count / elapsed
@@ -87,19 +87,19 @@ class VirtualHandGame:
             
     def update_game_mode(self, finger_count):
         """Update game mode based on finger count."""
-        if finger_count <= 2:
+        if finger_count == 5:
             self.current_mode_name = "SLOW-MO"
             self.speed_multiplier = config.MODE_SLOW_MULTIPLIER
             self.score_multiplier = config.MODE_SLOW_MULTIPLIER
-        elif finger_count == 3:
+        elif finger_count == 4:
             self.current_mode_name = "NORMAL"
             self.speed_multiplier = config.MODE_NORMAL_MULTIPLIER
             self.score_multiplier = config.MODE_NORMAL_MULTIPLIER
-        elif finger_count == 4:
+        elif finger_count == 3:
             self.current_mode_name = "FAST"
             self.speed_multiplier = config.MODE_FAST_MULTIPLIER
             self.score_multiplier = config.MODE_FAST_MULTIPLIER
-        elif finger_count == 5:
+        elif finger_count <= 2:
             self.current_mode_name = "TURBO"
             self.speed_multiplier = config.MODE_TURBO_MULTIPLIER
             self.score_multiplier = config.MODE_TURBO_MULTIPLIER
@@ -115,7 +115,7 @@ class VirtualHandGame:
         
         ball = {
             'x': x,
-            'y': 70,
+            'y': config.BALL_INITIAL_Y,
             'col': col,
             'type': 'bomb' if random.random() < config.BOMB_PROBABILITY else 'regular',
             'speed': speed
@@ -132,7 +132,7 @@ class VirtualHandGame:
             ball['y'] += ball['speed']
             
             # Check collision at net level
-            if ball['y'] >= config.CAMERA_HEIGHT - 130:
+            if ball['y'] >= config.CAMERA_HEIGHT - config.BASKET_DETECTION_THRESHOLD_Y:
                 if ball['col'] == self.basket_col:
                     # Ball caught!
                     if ball['type'] == 'regular':

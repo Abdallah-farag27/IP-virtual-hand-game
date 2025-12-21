@@ -84,6 +84,7 @@ MAX_COLUMN_JUMP = 1     # Maximum column jump per frame (prevents sudden jumps)
 GAME_DURATION = 90      # Game duration in seconds
 
 # Ball Spawning
+BALL_INITIAL_Y = 70         # Initial Y position for spawned balls
 BALL_SPAWN_INTERVAL = 1.0   # Time between ball spawns (seconds)
                             # Lower = more balls, harder game
                             # Higher = fewer balls, easier game
@@ -101,6 +102,7 @@ BALL_SPEED = 4          # Ball falling speed (pixels per frame)
 POINTS_PER_BALL = 10    # Points for catching a ball
 LIVES_LOST_PER_MISS = 1 # Lives lost for missing a ball
 LIVES_LOST_PER_BOMB = 1 # Lives lost for catching a bomb
+BASKET_DETECTION_THRESHOLD_Y = 130  # Distance from bottom for basket detection
 
 # Starting Lives
 STARTING_LIVES = 3
@@ -126,6 +128,7 @@ COLUMN_DIVIDER_COLOR = (150, 150, 150)  # Gray
 
 # Frame Processing
 TARGET_FPS = 30         # Target frames per second
+FPS_UPDATE_INTERVAL_FRAMES = 10  # Frames between FPS updates
                         # Lower = less CPU usage
                         # Higher = smoother gameplay
 

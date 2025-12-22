@@ -1,6 +1,6 @@
 import cv2
 import numpy as np
-from hand_detector import HandDetector
+from src.modules.hand_detector import HandDetector
 
 class TestStep4DistanceTransform:
     def __init__(self):

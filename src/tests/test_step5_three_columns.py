@@ -1,8 +1,8 @@
 import cv2
 import numpy as np
-from hand_detector import HandDetector
-from column_mapper import ColumnMapper
-from renderer import Renderer
+from src.modules.hand_detector import HandDetector
+from src.modules.column_mapper import ColumnMapper
+from src.modules.renderer import Renderer
 
 class TestStep5ThreeColumns:
     def __init__(self):

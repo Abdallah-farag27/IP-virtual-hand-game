@@ -1,10 +1,10 @@
 import cv2
 import random
-from hand_detector import HandDetector
-from hand_detector_mediapipe import MediaPipeDetector
-from column_mapper import ColumnMapper
-from renderer import Renderer
-from game_timer import GameTimer
+from src.modules.hand_detector import HandDetector
+from src.modules.hand_detector_mediapipe import MediaPipeDetector
+from src.modules.column_mapper import ColumnMapper
+from src.modules.renderer import Renderer
+from src.modules.game_timer import GameTimer
 import config
 
 class VirtualHandGame: 

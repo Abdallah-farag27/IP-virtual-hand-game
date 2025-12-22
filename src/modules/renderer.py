@@ -9,44 +9,36 @@ class Renderer:
         self.num_cols = num_cols
         self.col_width = width / num_cols
         
-        # Load images
         self.load_images()
         
-        # Colors (BGR)
         self.TEXT_COLOR = (255, 255, 255)
         self.DIVIDER_COLOR = (150, 150, 150)
         
     def load_images(self):
-        # Basketball image (orange circle with black lines)
         self.basketball = np.zeros((60, 60, 3), dtype=np.uint8)
         cv2.circle(self.basketball, (30, 30), 28, (0, 100, 255), -1)
         cv2.ellipse(self.basketball, (30, 30), (28, 28), 0, -45, 45, (0, 0, 0), 2)
         cv2.ellipse(self.basketball, (30, 30), (28, 28), 90, -45, 45, (0, 0, 0), 2)
         cv2.circle(self.basketball, (30, 30), 28, (0, 0, 0), 2)
         
-        # Bomb image (black ball with fuse)
         self.bomb = np.zeros((60, 60, 3), dtype=np.uint8)
         cv2.circle(self.bomb, (30, 35), 22, (30, 30, 30), -1)
         cv2.line(self.bomb, (30, 13), (30, 3), (150, 150, 150), 3)
         cv2.circle(self.bomb, (30, 3), 4, (0, 0, 255), -1)
         cv2.circle(self.bomb, (30, 35), 22, (0, 0, 0), 2)
         
-        # Basketball net
         self.net_width = 140
         self.net_height = 80
         self.net = np.zeros((self.net_height, self.net_width, 3), dtype=np.uint8)
         
-        # Draw rim (orange)
         rim_y = 15
         cv2.ellipse(self.net, (self.net_width//2, rim_y), (60, 8), 0, 0, 180, (0, 140, 255), -1)
         cv2.ellipse(self.net, (self.net_width//2, rim_y), (60, 8), 0, 0, 180, (0, 80, 200), 3)
         
-        # Draw net mesh (white ropes)
         net_spacing = 12
         for i in range(10, self.net_width-10, net_spacing):
             cv2.line(self.net, (i, rim_y), (self.net_width//2, self.net_height-5), (255, 255, 255), 1)
         
-        # Horizontal net lines
         for y in range(rim_y+10, self.net_height-10, 15):
             cv2.ellipse(self.net, (self.net_width//2, y), (int(55*(1-(y-rim_y)/60)), 3), 0, 0, 180, (255, 255, 255), 1)
     
@@ -56,7 +48,6 @@ class Renderer:
             cv2.line(frame, (x, 0), (x, self.height), self.DIVIDER_COLOR, 2)
     
     def draw_net(self, frame, basket_col):
-        # Calculate net position
         x_center = int(basket_col * self.col_width + self.col_width / 2)
         y_bottom = self.height - 50
         
@@ -66,7 +57,6 @@ class Renderer:
         # Ensure net stays in bounds
         x1 = max(0, min(x1, self.width - self.net_width))
         
-        # Overlay net with transparency
         roi = frame[y1:y1+self.net_height, x1:x1+self.net_width]
         mask = cv2.cvtColor(self.net, cv2.COLOR_BGR2GRAY)
         _, mask = cv2.threshold(mask, 1, 255, cv2.THRESH_BINARY)

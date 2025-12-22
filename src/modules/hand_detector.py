@@ -26,26 +26,21 @@ class HandDetector:
         return roi_start_y, frame_height
     
     def detect_skin(self, frame, use_ycrcb=False):
-        # Convert to HSV
         hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
         
-        # Apply skin color thresholds (HSV)
         mask1 = cv2.inRange(hsv, self.lower_skin_1, self.upper_skin_1)
         mask2 = cv2.inRange(hsv, self.lower_skin_2, self.upper_skin_2)
         
-        # Combine HSV masks
         skin_mask = cv2.bitwise_or(mask1, mask2)
         
         # Optionally add YCrCb detection for more robustness
         if use_ycrcb:
-            # Convert to YCrCb
             ycrcb = cv2.cvtColor(frame, cv2.COLOR_BGR2YCrCb)
             
             # YCrCb skin color range
             lower_ycrcb = np.array([0, 133, 77], dtype=np.uint8)
             upper_ycrcb = np.array([255, 173, 127], dtype=np.uint8)
             
-            # Apply YCrCb threshold
             mask_ycrcb = cv2.inRange(ycrcb, lower_ycrcb, upper_ycrcb)
             
             # Combine with HSV mask (AND operation for more precision)
@@ -66,7 +61,6 @@ class HandDetector:
         return skin_mask
     
     def find_hand_contour(self, mask):
-        # Find all contours
         contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
         
         if not contours:
@@ -121,16 +115,12 @@ class HandDetector:
     def detect_hand(self, frame, use_smoothing=True):
         frame_height, frame_width = frame.shape[:2]
         
-        # Get ROI bounds
         roi_start_y, roi_end_y = self.get_roi_bounds(frame_height)
         
-        # Extract ROI (lower portion of frame)
         roi = frame[roi_start_y:roi_end_y, :]
         
-        # Detect skin in ROI
         skin_mask = self.detect_skin(roi)
         
-        # Find hand contour
         hand_contour = self.find_hand_contour(skin_mask)
         
         result = {

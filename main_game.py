@@ -9,33 +9,27 @@ import config
 
 class VirtualHandGame: 
     def __init__(self):
-        # Initialize camera
         self.cap = cv2.VideoCapture(config.CAMERA_INDEX)
         self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, config.CAMERA_WIDTH)
         self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, config.CAMERA_HEIGHT)
         
-        # Initialize hand detector (Will be set in select_mode)
         self.detector = None
         self.detector_type = "classic"
         
-        # Initialize column mapper
         self.mapper = ColumnMapper(
             num_cols=config.NUM_COLUMNS,
             smooth=config.ENABLE_COLUMN_SMOOTHING,
             max_jump=config.MAX_COLUMN_JUMP
         )
         
-        # Initialize renderer
         self.renderer = Renderer(
             width=config.CAMERA_WIDTH,
             height=config.CAMERA_HEIGHT,
             num_cols=config.NUM_COLUMNS
         )
         
-        # Initialize timer
         self.timer = GameTimer(total_time=config.GAME_DURATION)
         
-        # Game state
         self.score = 0
         self.lives = config.STARTING_LIVES
         self.balls = []
@@ -43,28 +37,22 @@ class VirtualHandGame:
         self.game_over = False
         self.game_won = False
         
-        # Game Modes & Multipliers
         self.current_mode_name = "NORMAL"
         self.speed_multiplier = 1.0
         self.score_multiplier = 1.0
         
-        # Ball spawning
         self.last_spawn = 0
         self.base_spawn_interval = config.BALL_SPAWN_INTERVAL
         
-        # Bomb effect
         self.bomb_effect_frame = 0
         
-        # FPS tracking
         self.fps = 0
         self.frame_count = 0
         self.fps_start_time = cv2.getTickCount()
 
-        # Toggle for finger detection
         self.finger_detection_enabled = False
     
     def select_mode(self):
-        """Show start screen and get user mode selection."""
         print("Waiting for mode selection...")
         while True:
             ret, frame = self.cap.read()
@@ -263,17 +251,14 @@ class VirtualHandGame:
                 
                 if not self.game_over:
                     
-                    # Get ROI bounds for drawing
-                    # Get ROI bounds for drawing
                     roi_start_y, _ = self.detector.get_roi_bounds(config.CAMERA_HEIGHT)
                     
                     
-                    # Initialize hand_info with defaults
                     hand_info = {
                         'detected': False,
                         'x': None,
                         'y': None,
-                        'roi_start_y': roi_start_y, # Ensure this is always available
+                        'roi_start_y': roi_start_y,
                         'contour': None
                     }
 
@@ -405,9 +390,9 @@ class VirtualHandGame:
                     print("GAME OVER!")
                     print(f"Final Score: {self.score}")
                     print("=" * 80)
-                    return # Exit function
+                    return 
                 elif key == ord('r') and self.game_over:
-                    break # Break inner loop to return to Mode Selection
+                    break 
                 elif key == ord('d'):
                     config.SHOW_DEBUG_INFO = not config.SHOW_DEBUG_INFO
                     print(f"Debug info: {'ON' if config.SHOW_DEBUG_INFO else 'OFF'}")

@@ -12,22 +12,18 @@ class TestAllSteps:
         
         # Initialize hand detector with all improvements
         self.detector = HandDetector(
-            roi_height_ratio=0.5,      # Step 1: ROI restriction
-            min_area=5000,              # Step 2: Area filtering
-            max_area=50000              # Step 2: Area filtering
+            roi_height_ratio=0.5,      
+            min_area=5000,             
+            max_area=50000              
         )
-        self.detector.smoothing_alpha = 0.3  # Step 3: Temporal smoothing
+        self.detector.smoothing_alpha = 0.3  
         
-        # Initialize column mapper (3 columns)
-        self.mapper = ColumnMapper(num_cols=3, smooth=True)  # Step 5: 3 columns
+        self.mapper = ColumnMapper(num_cols=3, smooth=True)  
         
-        # Initialize renderer
         self.renderer = Renderer(width=960, height=720, num_cols=3)
         
-        # Game state
-        self.basket_col = 1  # Start at center
+        self.basket_col = 1  
         
-        # Detection method toggle
         self.use_palm_detection = True  # Step 4: Distance transform
         
         # FPS calculation
